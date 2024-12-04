@@ -1,0 +1,99 @@
+/* Splash Screen Container */
+.splash-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: linear-gradient(135deg, #0f3d3e, #1c5f5c); /* Dark Green-Blue Gradient */
+    color: #ffffff; /* White text */
+    overflow: hidden; /* Ensure animation stays within bounds */
+    position: relative;
+  }
+  
+  /* Stars */
+  .stars {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+  }
+  
+  /* Single Star */
+  .star {
+    position: absolute;
+    border-radius: 50%;
+    background-color: white;
+    animation: twinkle 1.5s infinite ease-in-out;
+  }
+  
+  /* Twinkling Effect */
+  @keyframes twinkle {
+    0% {
+      opacity: 0;
+      transform: scale(0.5);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(0.5);
+    }
+  }
+  
+  /* Snake Effect */
+  .splash-snake {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    z-index: 2; /* Ensure snake and text are on top */
+  }
+  
+  /* Title */
+  .splash-title {
+    font-size: 4rem;
+    font-family: 'Cinzel', serif; /* Fantasy-style font */
+    color: #c0c0c0; /* Silver for Slytherin theme */
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7); /* Slight glow */
+    margin-bottom: 20px;
+    animation: fadeInText 2s ease-in forwards;
+  }
+  
+  /* Snake Trail */
+  .snake-trail {
+    width: 100%;
+    height: 2px;
+    position: absolute;
+    bottom: 0;
+    background: linear-gradient(90deg, #a8e6cf, #1f554d, #c0c0c0); /* Mint, green, and silver */
+    animation: slither 4s linear infinite;
+    border-radius: 2px;
+  }
+  
+  /* Animations */
+  @keyframes fadeInText {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes slither {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+  

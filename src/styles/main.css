@@ -1,0 +1,29 @@
+body {
+  font-family: 'Inter', Arial, sans-serif; /* Added Inter as primary font */
+  margin: 0;
+  padding: 0;
+  line-height: 1.6; /* Improved readability */
+  background-color: #f4f4f4; /* Soft background color */
+  color: #333; /* Consistent text color */
+}
+
+h1, h2 {
+  color: #2c3e50; /* Slightly deeper charcoal for headings */
+  font-weight: 300; /* Lighter font weight for modern look */
+  margin-bottom: 20px;
+}
+
+/* Optional: Add some responsive typography */
+@media (max-width: 600px) {
+  body {
+      font-size: 14px;
+  }
+  
+  h1 {
+      font-size: 24px;
+  }
+  
+  h2 {
+      font-size: 20px;
+  }
+}

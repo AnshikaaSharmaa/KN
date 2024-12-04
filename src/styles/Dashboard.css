@@ -1,0 +1,110 @@
+/* General dashboard container */
+.dashboard-container {
+  padding: 20px;
+  margin-top: 20px;
+}
+
+/* Paper element containing the task list */
+.dashboard-paper {
+  padding: 20px;
+  background-color: #fafafa;
+  border-radius: 8px;
+}
+
+/* Header section */
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.dashboard-title {
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+/* Grid for task list */
+.dashboard-grid {
+  margin-top: 20px;
+}
+
+/* Loading spinner */
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 30px;
+  margin-bottom: 30px;
+}
+
+/* Snackbar for success/error messages */
+.MuiSnackbar-root {
+  bottom: 80px;  /* Adjust for visibility above the bottom */
+}
+
+/* Task card styles */
+.task-card {
+  margin-bottom: 20px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.card-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+}
+
+/* Task item styles (task display) */
+.task-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  background-color: #f9f9f9;
+  margin: 10px 0;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.task-item.completed {
+  background-color: #d3ffd3; /* Light green for completed tasks */
+}
+
+.task-item .task-title {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.task-item .task-description {
+  color: #555;
+  font-size: 1rem;
+}
+
+/* Task item button styles (Complete, Delete) */
+.task-buttons {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.task-button {
+  font-size: 0.9rem;
+  padding: 5px 10px;
+}
+
+.complete-task {
+  background-color: #4caf50;
+  color: white;
+}
+
+.delete-task {
+  background-color: #f44336;
+  color: white;
+}
+
+.task-button:hover {
+  opacity: 0.8;
+}

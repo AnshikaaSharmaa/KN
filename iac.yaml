@@ -1,0 +1,187 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Infrastructure for Keynotes with Load Balancer"
+
+Parameters:
+  # Parameters for S3 paths to Lambda ZIP files
+  CreateTaskLambdaZip:
+    Type: String
+    Description: "S3 path for createTask Lambda zip file (e.g., keynotes-files/createTask.zip)"
+
+  ReadTaskLambdaZip:
+    Type: String
+    Description: "S3 path for readTask Lambda zip file (e.g., keynotes-files/readTask.zip)"
+
+  UpdateTaskLambdaZip:
+    Type: String
+    Description: "S3 path for updateTask Lambda zip file (e.g., keynotes-files/updateTask.zip)"
+
+  DeleteTaskLambdaZip:
+    Type: String
+    Description: "S3 path for deleteTask Lambda zip file (e.g., keynotes-files/deleteTask.zip)"
+
+Resources:
+  # Security Group for EC2 Instance and Load Balancer
+  AppSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: "Allow HTTP traffic to EC2 instance and Load Balancer"
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3000
+          ToPort: 3000
+          CidrIp: 0.0.0.0/0
+
+  # EC2 Instance for React App
+  AppInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      SecurityGroups:
+        - !Ref AppSecurityGroup
+      ImageId: ami-0453ec754f44f9a4a # Update with your preferred AMI ID
+      KeyName: keynotes # Ensure this is your EC2 key pair name
+      Tags:
+        - Key: Name
+          Value: Keynotes-App
+
+  # Application Load Balancer
+  AppLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: KeynotesALB
+      Scheme: internet-facing
+      SecurityGroups:
+        - !Ref AppSecurityGroup
+      Subnets:
+        - subnet-073b08c52f5d5ddb2 # Replace with actual subnet IDs
+        - subnet-2
+
+  # Target Group for the Load Balancer
+  AppTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: KeynotesTG
+      Port: 3000
+      Protocol: HTTP
+      VpcId: vpc-077f5381bdbc69e6a # Replace with your actual VPC ID
+      TargetType: instance
+      Targets:
+        - Id: !Ref AppInstance
+
+  # Listener for the Load Balancer
+  AppLoadBalancerListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref AppLoadBalancer
+      Port: 3000
+      Protocol: HTTP
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref AppTargetGroup
+
+  # Lambda Functions
+  CreateTaskLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: createTask
+      Handler: index.create_task_handler
+      Role: arn:aws:iam::499652895534:role/LabRole
+      Code:
+        S3Bucket: keynotes-files
+        S3Key: createkeynotes-fe49e8eb-c58e-4f88-bc9f-3bf7212b94b3.zip
+      Runtime: python3.8
+
+  ReadTaskLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: readTask
+      Handler: index.read_task_handler
+      Role: arn:aws:iam::499652895534:role/LabRole
+      Code:
+        S3Bucket: keynotes-files
+        S3Key: getkeynotes-678b41e6-4f31-49c4-9ff5-4ce1476b0960.zip
+      Runtime: python3.8
+
+  UpdateTaskLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: updateTask
+      Handler: index.update_task_handler
+      Role: arn:aws:iam::499652895534:role/LabRole
+      Code:
+        S3Bucket: keynotes-files
+        S3Key: updatekeynotes-9ceb3a6f-48ff-491a-b3a7-dd2cacf57747.zip
+      Runtime: python3.8
+
+  DeleteTaskLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: deleteTask
+      Handler: index.delete_task_handler
+      Role: arn:aws:iam::499652895534:role/LabRole
+      Code:
+        S3Bucket: keynotes-files
+        S3Key: deletekeynotes-67c8b48b-1b13-49dc-9ded-6ac3d8027fc5.zip
+      Runtime: python3.8
+
+  # API Gateway
+  TaskAPIGateway:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: "KeynotesAPIGateway"
+
+  # SNS Topic
+  TaskSNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: keynotesnotifs
+
+  # DynamoDB Table
+  TasksTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: keynotes-tasks
+      AttributeDefinitions:
+        - AttributeName: taskID
+          AttributeType: S
+      KeySchema:
+        - AttributeName: taskID
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
+  # Cognito User Pool and Client
+  CognitoUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: KeynotesUserPool
+
+  CognitoUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: !Ref CognitoUserPool
+      ClientName: KeynotesClient
+
+Outputs:
+  APIGatewayURL:
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${TaskAPIGateway}.execute-api.${AWS::Region}.amazonaws.com"
+
+  LoadBalancerDNS:
+    Description: "DNS Name for the Load Balancer"
+    Value: !GetAtt AppLoadBalancer.DNSName
+
+  CognitoPoolID:
+    Description: "User Pool ID for Cognito"
+    Value: !Ref CognitoUserPool
+
+  CognitoClientID:
+    Description: "Cognito App Client ID"
+    Value: !Ref CognitoUserPoolClient
+
+  DynamoDBTableName:
+    Description: "DynamoDB Table Name"
+    Value: !Ref TasksTable
+
+  SNSTopicARN:
+    Description: "SNS Topic ARN"
+    Value: !Ref TaskSNSTopic

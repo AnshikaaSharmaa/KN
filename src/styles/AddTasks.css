@@ -1,0 +1,66 @@
+/* AddTasks.css */
+
+/* Container Styling */
+.add-task-container {
+    padding: 20px;
+    margin-top: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  /* Card Styling */
+  .task-card {
+    width: 100%;
+    padding: 30px;
+    background-color: #ffffff; /* Clean white background */
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Soft shadow */
+    margin-bottom: 20px;
+  }
+  
+  /* Title Styling */
+  .task-title {
+    font-family: 'Inter', sans-serif;
+    color: #333; /* Adjust this to match the task dashboard color */
+    font-weight: 500;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  /* TaskForm component styling */
+  .input-field {
+    margin-bottom: 20px;
+  }
+  
+  /* Submit Button Styling */
+  .submit-button {
+    background-color: #27ae60; /* Green button */
+    color: white;
+    padding: 12px 20px;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .submit-button:hover {
+    background-color: #2ecc71; /* Lighter green on hover */
+  }
+  
+  /* Snackbar Styling */
+  .MuiSnackbar-root .MuiAlert-filledSuccess {
+    background-color: #2ecc71; /* Success message in vibrant green */
+  }
+  
+  .MuiSnackbar-root .MuiAlert-filledError {
+    background-color: #e74c3c; /* Error message in red */
+  }
+  
+  /* Responsive Styling */
+  @media (max-width: 600px) {
+    .task-card {
+      padding: 20px;
+    }
+  }
+  

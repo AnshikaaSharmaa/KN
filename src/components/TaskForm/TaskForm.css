@@ -1,0 +1,62 @@
+/* TaskForm.css */
+
+/* Container for the form */
+.task-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  border: 1px solid #e0e0e0; /* Light border for the form */
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: #ffffff; /* Clean white background */
+}
+
+/* Styling for each text input field */
+.task-form .MuiTextField-root,
+.task-form .MuiFormControl-root {
+  width: 100%;
+}
+
+/* Adjust the background color of input fields */
+.task-form .MuiInputBase-root {
+  background-color: #f7f7f7; /* Light gray background for text inputs */
+  border-radius: 4px;
+  padding-left: 10px;
+}
+
+/* Hover state for text fields */
+.task-form .MuiInputBase-root:hover {
+  background-color: #e0e0e0; /* Slightly darker gray on hover */
+}
+
+/* Focus state for text fields */
+.task-form .MuiInputBase-root.Mui-focused {
+  background-color: #e0f7fa; /* Light cyan when focused */
+  border-color: #2ecc71; /* Green border for focus state */
+}
+
+/* Style the form control label */
+.task-form .MuiInputLabel-root {
+  color: #333; /* Darker label color for better contrast */
+}
+
+/* Styling for the form control select dropdown */
+.task-form .importance-dropdown {
+  background-color: #f7f7f7; /* Same light background for dropdown */
+}
+
+/* Styling for the submit button */
+.submit-button {
+  margin-top: 16px;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: background-color 0.3s ease;
+  color: white;
+}
+
+/* Hover state for the submit button */
+.submit-button:hover {
+  opacity: 0.9;
+}
