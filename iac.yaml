@@ -1,48 +1,108 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: "Infrastructure for Keynotes with Load Balancer"
+Description: "Infrastructure for Keynotes Application with Load Balancer, API Gateway, and VPC"
 
 Parameters:
-  # Parameters for S3 paths to Lambda ZIP files
   CreateTaskLambdaZip:
     Type: String
     Description: "S3 path for createTask Lambda zip file (e.g., keynotes-files/createTask.zip)"
-
   ReadTaskLambdaZip:
     Type: String
     Description: "S3 path for readTask Lambda zip file (e.g., keynotes-files/readTask.zip)"
-
   UpdateTaskLambdaZip:
     Type: String
     Description: "S3 path for updateTask Lambda zip file (e.g., keynotes-files/updateTask.zip)"
-
   DeleteTaskLambdaZip:
     Type: String
     Description: "S3 path for deleteTask Lambda zip file (e.g., keynotes-files/deleteTask.zip)"
 
 Resources:
-  # Security Group for EC2 Instance and Load Balancer
+  # VPC
+  AppVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: AppVPC
+
+  # Internet Gateway
+  AppInternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: AppInternetGateway
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref AppVPC
+      InternetGatewayId: !Ref AppInternetGateway
+
+  # Public Route Table
+  AppPublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref AppVPC
+      Tags:
+        - Key: Name
+          Value: AppPublicRouteTable
+
+  AppPublicRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref AppPublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref AppInternetGateway
+
+  # Public Subnets
+  AppPublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref AppVPC
+      CidrBlock: 10.0.1.0/24
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: us-east-1a
+      Tags:
+        - Key: Name
+          Value: AppPublicSubnet1
+
+  AppPublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref AppVPC
+      CidrBlock: 10.0.2.0/24
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: us-east-1b
+      Tags:
+        - Key: Name
+          Value: AppPublicSubnet2
+
+  SubnetRouteTableAssociation1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref AppPublicSubnet1
+      RouteTableId: !Ref AppPublicRouteTable
+
+  SubnetRouteTableAssociation2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref AppPublicSubnet2
+      RouteTableId: !Ref AppPublicRouteTable
+
+  # Security Group
   AppSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
+      VpcId: !Ref AppVPC
       GroupDescription: "Allow HTTP traffic to EC2 instance and Load Balancer"
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 3000
           ToPort: 3000
           CidrIp: 0.0.0.0/0
-
-  # EC2 Instance for React App
-  AppInstance:
-    Type: AWS::EC2::Instance
-    Properties:
-      InstanceType: t2.micro
-      SecurityGroups:
-        - !Ref AppSecurityGroup
-      ImageId: ami-0453ec754f44f9a4a # Update with your preferred AMI ID
-      KeyName: keynotes # Ensure this is your EC2 key pair name
-      Tags:
-        - Key: Name
-          Value: Keynotes-App
 
   # Application Load Balancer
   AppLoadBalancer:
@@ -53,22 +113,20 @@ Resources:
       SecurityGroups:
         - !Ref AppSecurityGroup
       Subnets:
-        - subnet-073b08c52f5d5ddb2 # Replace with actual subnet IDs
-        - subnet-2
+        - !Ref AppPublicSubnet1
+        - !Ref AppPublicSubnet2
 
-  # Target Group for the Load Balancer
+  # Target Group
   AppTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       Name: KeynotesTG
       Port: 3000
       Protocol: HTTP
-      VpcId: vpc-077f5381bdbc69e6a # Replace with your actual VPC ID
+      VpcId: !Ref AppVPC
       TargetType: instance
-      Targets:
-        - Id: !Ref AppInstance
 
-  # Listener for the Load Balancer
+  # Listener
   AppLoadBalancerListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
@@ -79,6 +137,20 @@ Resources:
         - Type: forward
           TargetGroupArn: !Ref AppTargetGroup
 
+  # EC2 Instance
+  AppInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      SecurityGroupIds:
+        - !Ref AppSecurityGroup
+      SubnetId: !Ref AppPublicSubnet1
+      ImageId: ami-0453ec754f44f9a4a
+      KeyName: keynotes # Ensure this is your EC2 key pair name
+      Tags:
+        - Key: Name
+          Value: Keynotes-App
+
   # Lambda Functions
   CreateTaskLambda:
     Type: AWS::Lambda::Function
@@ -88,7 +160,7 @@ Resources:
       Role: arn:aws:iam::499652895534:role/LabRole
       Code:
         S3Bucket: keynotes-files
-        S3Key: createkeynotes-fe49e8eb-c58e-4f88-bc9f-3bf7212b94b3.zip
+        S3Key: !Ref CreateTaskLambdaZip
       Runtime: python3.8
 
   ReadTaskLambda:
@@ -99,7 +171,7 @@ Resources:
       Role: arn:aws:iam::499652895534:role/LabRole
       Code:
         S3Bucket: keynotes-files
-        S3Key: getkeynotes-678b41e6-4f31-49c4-9ff5-4ce1476b0960.zip
+        S3Key: !Ref ReadTaskLambdaZip
       Runtime: python3.8
 
   UpdateTaskLambda:
@@ -110,7 +182,7 @@ Resources:
       Role: arn:aws:iam::499652895534:role/LabRole
       Code:
         S3Bucket: keynotes-files
-        S3Key: updatekeynotes-9ceb3a6f-48ff-491a-b3a7-dd2cacf57747.zip
+        S3Key: !Ref UpdateTaskLambdaZip
       Runtime: python3.8
 
   DeleteTaskLambda:
@@ -121,7 +193,7 @@ Resources:
       Role: arn:aws:iam::499652895534:role/LabRole
       Code:
         S3Bucket: keynotes-files
-        S3Key: deletekeynotes-67c8b48b-1b13-49dc-9ded-6ac3d8027fc5.zip
+        S3Key: !Ref DeleteTaskLambdaZip
       Runtime: python3.8
 
   # API Gateway
@@ -129,12 +201,83 @@ Resources:
     Type: AWS::ApiGateway::RestApi
     Properties:
       Name: "KeynotesAPIGateway"
+      Description: "API Gateway for Keynotes Task Management"
 
-  # SNS Topic
-  TaskSNSTopic:
-    Type: AWS::SNS::Topic
+  CreateTaskResource:
+    Type: AWS::ApiGateway::Resource
     Properties:
-      TopicName: keynotesnotifs
+      ParentId: !GetAtt TaskAPIGateway.RootResourceId
+      PathPart: create
+      RestApiId: !Ref TaskAPIGateway
+
+  CreateTaskMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref TaskAPIGateway
+      ResourceId: !Ref CreateTaskResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CreateTaskLambda.Arn}/invocations"
+
+  ReadTaskResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !GetAtt TaskAPIGateway.RootResourceId
+      PathPart: read
+      RestApiId: !Ref TaskAPIGateway
+
+  ReadTaskMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref TaskAPIGateway
+      ResourceId: !Ref ReadTaskResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: GET
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ReadTaskLambda.Arn}/invocations"
+
+  UpdateTaskResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !GetAtt TaskAPIGateway.RootResourceId
+      PathPart: update
+      RestApiId: !Ref TaskAPIGateway
+
+  UpdateTaskMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref TaskAPIGateway
+      ResourceId: !Ref UpdateTaskResource
+      HttpMethod: PUT
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: PUT
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UpdateTaskLambda.Arn}/invocations"
+
+  DeleteTaskResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !GetAtt TaskAPIGateway.RootResourceId
+      PathPart: delete
+      RestApiId: !Ref TaskAPIGateway
+
+  DeleteTaskMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref TaskAPIGateway
+      ResourceId: !Ref DeleteTaskResource
+      HttpMethod: DELETE
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: DELETE
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DeleteTaskLambda.Arn}/invocations"
 
   # DynamoDB Table
   TasksTable:
@@ -149,7 +292,13 @@ Resources:
           KeyType: HASH
       BillingMode: PAY_PER_REQUEST
 
-  # Cognito User Pool and Client
+  # SNS Topic
+  TaskSNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: keynotesnotifs
+
+  # Cognito User Pool
   CognitoUserPool:
     Type: AWS::Cognito::UserPool
     Properties:
